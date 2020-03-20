@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Demo</title>
+    </head>
+    <body>
+        <h1>WebAssembly Demo</h1>
+      <script src='string.js'>
+      </script>
+      <script>
+        
+        console.log(Module); // Module will be there afer loading string.js
+        Module["onRuntimeInitialized"] = () =>{
+          console.log(_strFromC())
+          console.log(UTF8ToString(_strFromC()))
+          console.log(UTF16ToString(_strFromC()))
+          console.log(UTF32ToString(_strFromC()))
+          console.log(stringToUTF8("NEW STRING", _strFromC(), lengthBytesUTF8("NEW STRING")+1)) // +1 for end of string
+          console.log(UTF8ToString(_strFromC()))
+        }
+        
+      </script>
+
+      
+    </body>
+</html>
+
+
+<!-- program.wasp  https://wasdk.github.io/WasmFiddle/
+    
+#include <string.h>
+
+void numLog(int n);
+void strLog(char * offset, int length);
+
+int main() { 
+  return 42;
+}
+
+void greet(){
+  char * msg = "Hello from C!";
+  strLog(msg, strlen(msg));
+}
+
+void myFunc(int a){
+  numLog(a*2);
+}
+
+-->
+
+<!-- https://webassembly.studio/ -- main.wat
+
+(module
+ (type $FUNCSIG$vii (func (param i32 i32)))
+ (type $FUNCSIG$vi (func (param i32)))
+ (import "env" "numLog" (func $numLog (param i32)))
+ (import "env" "strLog" (func $strLog (param i32 i32)))
+ (import "env" "memory" (memory $0 2)) ----------------------MODIFIED
+ (table 0 anyfunc)
+ (data (i32.const 16) "Hello from C!\00")
+ (export "memory" (memory $0))
+ (export "main" (func $main))
+ (export "greet" (func $greet))
+ (export "myFunc" (func $myFunc))
+ (func $main (; 2 ;) (result i32)
+  (i32.const 42)
+ )
+ (func $greet (; 3 ;)
+  (call $strLog
+   (i32.const 16)
+   (i32.const 13)
+  )
+ )
+ (func $myFunc (; 4 ;) (param $0 i32)
+  (call $numLog
+   (i32.shl
+    (get_local $0)
+    (i32.const 1)
+   )
+  )
+ )
+) 
+-->
